@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Calendar } from "@/components/ui/calendar";
 import { CalendarIcon, CheckCircle, Circle, Plus } from "lucide-react";
@@ -19,35 +19,48 @@ interface Task {
 }
 
 interface TaskListProps {
-  listName: string;
+    listName: string;
 }
 
 const TaskList: React.FC<TaskListProps> = ({ listName }) => {
-  const [tasks, setTasks] = useState<Task[]>([]);
-  const [newTask, setNewTask] = useState("");
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
-  const [selectedTime, setSelectedTime] = useState<string | undefined>(undefined);
+    const [tasks, setTasks] = useState<Record<string, Task[]>>({});
+    const [newTask, setNewTask] = useState("");
+    const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
+    const [selectedTime, setSelectedTime] = useState<string | undefined>(undefined);
+
+    useEffect(() => {
+        if (!tasks[listName]) {
+            setTasks(prevTasks => ({ ...prevTasks, [listName]: [] }));
+        }
+    }, [listName, tasks]);
+
+    const currentTasks = tasks[listName] || [];
+
+    const updateTasks = (newTasks: Task[]) => {
+        setTasks(prevTasks => ({ ...prevTasks, [listName]: newTasks }));
+    }
 
   const addTask = () => {
     if (newTask.trim() !== "") {
-      setTasks([
-        ...tasks,
-        { id: Date.now().toString(), name: newTask, dueDate: selectedDate, dueTime: selectedTime, completed: false },
-      ]);
-      setNewTask("");
+      const newTaskItem = { id: Date.now().toString(), name: newTask, dueDate: selectedDate, dueTime: selectedTime, completed: false };
+      updateTasks([...currentTasks, newTaskItem]);
+
+        setNewTask("");
+
+      
       setSelectedDate(undefined);
       setSelectedTime(undefined);
     }
   };
 
   const toggleComplete = (id: string) => {
-    setTasks(
-      tasks.map((task) =>
+    updateTasks(
+      currentTasks.map((task) =>
         task.id === id ? { ...task, completed: !task.completed } : task
       )
     );
   };
-
+  
   return (
     <div>
       <div className="flex items-center space-x-2 mb-4">
@@ -84,7 +97,7 @@ const TaskList: React.FC<TaskListProps> = ({ listName }) => {
         <Button onClick={addTask}><Plus className="w-4 h-4 mr-2" /> Add Task</Button>
       </div>
       <ul>
-        {tasks.map((task) => (
+        {currentTasks.map((task) => (
           <li key={task.id} className="flex items-center justify-between py-2 border-b">
             <div className="flex items-center">
               <button onClick={() => toggleComplete(task.id)} className="mr-2">
