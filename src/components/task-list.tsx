@@ -7,11 +7,14 @@ import { CalendarIcon, CheckCircle, Circle, Plus } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { format } from 'date-fns';
+import { TimePicker } from "@/components/ui/time-picker";
 
 interface Task {
   id: string;
   name: string;
   dueDate?: Date;
+  dueTime?: string;
   completed: boolean;
 }
 
@@ -23,15 +26,17 @@ const TaskList: React.FC<TaskListProps> = ({ listName }) => {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [newTask, setNewTask] = useState("");
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
+  const [selectedTime, setSelectedTime] = useState<string | undefined>(undefined);
 
   const addTask = () => {
     if (newTask.trim() !== "") {
       setTasks([
         ...tasks,
-        { id: Date.now().toString(), name: newTask, dueDate: selectedDate, completed: false },
+        { id: Date.now().toString(), name: newTask, dueDate: selectedDate, dueTime: selectedTime, completed: false },
       ]);
       setNewTask("");
       setSelectedDate(undefined);
+      setSelectedTime(undefined);
     }
   };
 
@@ -62,7 +67,7 @@ const TaskList: React.FC<TaskListProps> = ({ listName }) => {
               )}
             >
               <CalendarIcon className="mr-2 h-4 w-4" />
-              {selectedDate ? selectedDate?.toLocaleDateString() : <span>Pick a date</span>}
+              {selectedDate ? format(selectedDate, 'PPP') : <span>Pick a date</span>}
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-auto p-0" align="center" side="bottom">
@@ -75,6 +80,7 @@ const TaskList: React.FC<TaskListProps> = ({ listName }) => {
             />
           </PopoverContent>
         </Popover>
+        <TimePicker value={selectedTime} setValue={setSelectedTime} />
         <Button onClick={addTask}><Plus className="w-4 h-4 mr-2" /> Add Task</Button>
       </div>
       <ul>
@@ -92,11 +98,18 @@ const TaskList: React.FC<TaskListProps> = ({ listName }) => {
                 {task.name}
               </span>
             </div>
-            {task.dueDate && (
-              <div className="text-sm text-muted-foreground">
-                Due: {task.dueDate.toLocaleDateString()}
-              </div>
-            )}
+            <div>
+              {task.dueDate && (
+                <div className="text-sm text-muted-foreground">
+                  Due Date: {task.dueDate.toLocaleDateString()}
+                </div>
+              )}
+              {task.dueTime && (
+                <div className="text-sm text-muted-foreground">
+                  Due Time: {task.dueTime}
+                </div>
+              )}
+            </div>
           </li>
         ))}
       </ul>
